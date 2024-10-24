@@ -1,14 +1,21 @@
+// MainActivity.java
 package com.example.home;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.view.Menu;
-import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
-
+import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.navigation.NavController;
@@ -16,68 +23,180 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
+import com.example.home.adapter.DeviceAdapter;
 import com.example.home.databinding.ActivityMainBinding;
+import com.example.home.ui.device.Device;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
     private AppBarConfiguration mAppBarConfiguration;
-    private ActivityMainBinding binding;
-    private ArrayList<String> deviceList;
-    private ArrayAdapter<String> adapter;
+    private ArrayList<Device> deviceList;
+    private DeviceAdapter adapter;
+    private static final String PREFS_NAME = "device_prefs";
+    private static final String DEVICE_LIST_KEY = "device_list";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            getWindow().setStatusBarColor(getResources().getColor(R.color.black));
+        }
+
+        ActivityMainBinding binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
         setSupportActionBar(binding.appBarMain.toolbar);
 
-        // Инициализация списка устройств
-        deviceList = new ArrayList<>();
-        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, deviceList);
-
-        ListView deviceListView = binding.navView.findViewById(R.id.device_list);
-        deviceListView.setAdapter(adapter);
-
-        // Обработчик для кнопки "Add Device"
-        Button addDeviceButton = binding.navView.findViewById(R.id.add_device);
-        addDeviceButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                addDevice();
-            }
-        });
-
-        // Обработчик нажатий на элементы списка
-        deviceListView.setOnItemClickListener((parent, view, position, id) -> {
-            Toast.makeText(MainActivity.this, "Clicked: " + deviceList.get(position), Toast.LENGTH_SHORT).show();
-        });
-
         DrawerLayout drawer = binding.drawerLayout;
-        mAppBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.nav_home) // Укажите только необходимые элементы
+        mAppBarConfiguration = new AppBarConfiguration.Builder(R.id.nav_home)
                 .setOpenableLayout(drawer)
                 .build();
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(binding.navView, navController);
-    }
 
-    private void addDevice() {
-        String newDevice = "Device " + (deviceList.size() + 1);
-        deviceList.add(newDevice);
-        adapter.notifyDataSetChanged();
-        Toast.makeText(this, "Добавлено: " + newDevice, Toast.LENGTH_SHORT).show();
+        ListView deviceListView = binding.navView.findViewById(R.id.device_list);
+        Button addDeviceButton = binding.navView.findViewById(R.id.add_device);
+
+        loadDeviceList(); // Загружаем спіс прылад пры стварэнні актыўнасці
+
+        adapter = new DeviceAdapter(this, deviceList);
+        deviceListView.setAdapter(adapter);
+
+        addDeviceButton.setOnClickListener(v -> addDevice());
+
+        deviceListView.setOnItemClickListener((parent, view, position, id) -> {
+            Device device = deviceList.get(position);
+            Intent intent = new Intent(MainActivity.this, DeviceDetailActivity.class);
+            intent.putExtra("device_name", device.getName());
+            startActivity(intent);
+        });
+
+        deviceListView.setOnItemLongClickListener((parent, view, position, id) -> {
+            showDeleteConfirmationDialog(position);
+            return true;
+        });
+
+        // Получаем текущего пользователя
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser != null) {
+            String email = currentUser.getEmail();
+
+            // Устанавливаем почту в TextView
+            TextView emailTextView = findViewById(R.id.textView);
+            if (emailTextView != null) {//почемуто нулл
+                emailTextView.setText(email);
+            }
+        }
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        saveDeviceList(); // Захоўваем спіс перад прыпыненнем актыўнасці
+    }
+
+    private void saveDeviceList() {
+        SharedPreferences sharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        Gson gson = new Gson();
+        String json = gson.toJson(deviceList);
+        String userKey = getCurrentUserKey();
+        editor.putString(userKey, json);
+        editor.apply();
+    }
+
+    private void loadDeviceList() {
+        SharedPreferences sharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        Gson gson = new Gson();
+        String userKey = getCurrentUserKey();
+        String json = sharedPreferences.getString(userKey, null);
+        Type type = new TypeToken<ArrayList<Device>>() {}.getType();
+        deviceList = gson.fromJson(json, type);
+
+        if (deviceList == null) {
+            deviceList = new ArrayList<>(); // Калі дадзеных няма, ствараем новы спіс
+        }
+    }
+
+    private String getCurrentUserKey() {
+        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        return DEVICE_LIST_KEY + "_" + userId;
+    }
+
+    public void addDevice() {
+        // Создаем LinearLayout для размещения EditText
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+
+        EditText deviceNameInput = new EditText(this);
+        deviceNameInput.setHint(getString(R.string.enter_device_name));
+
+        EditText deviceTypeInput = new EditText(this);
+        deviceTypeInput.setHint(getString(R.string.enter_device_type));
+
+        layout.addView(deviceNameInput);
+        layout.addView(deviceTypeInput);
+
+        new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.add_device)) // Заголовок диалога
+                .setView(layout)
+                .setPositiveButton(getString(R.string.add), (dialog, which) -> {
+                    String newDeviceName = deviceNameInput.getText().toString().trim();
+                    String newDeviceType = deviceTypeInput.getText().toString().trim();
+
+                    if (!newDeviceName.isEmpty() && !newDeviceType.isEmpty()) {
+                        boolean exists = false;
+                        for (Device device : deviceList) {
+                            if (device.getName().equals(newDeviceName)) {
+                                exists = true;
+                                break;
+                            }
+                        }
+
+                        if (exists) {
+                            Toast.makeText(this, getString(R.string.device_name_exists), Toast.LENGTH_SHORT).show();
+                        } else {
+                            Device newDevice = new Device(newDeviceName, newDeviceType); // Предполагается, что конструктор Device принимает тип
+                            deviceList.add(newDevice);
+                            adapter.notifyDataSetChanged();
+                            Toast.makeText(this, getString(R.string.added_device, newDeviceName), Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        Toast.makeText(this, getString(R.string.device_name_empty), Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton(getString(R.string.cancel), (dialog, which) -> dialog.cancel())
+                .show();
+    }
+
+    private void showDeleteConfirmationDialog(int position) {
+        new AlertDialog.Builder(this)
+                .setTitle("Выдаліць прыладу")
+                .setMessage("Вы ўпэўнены, што хочаце выдаліць гэтую прыладу?")
+                .setPositiveButton("Так", (dialog, which) -> deleteDevice(position))
+                .setNegativeButton("Не", null)
+                .show();
+    }
+
+    private void deleteDevice(int position) {
+        deviceList.remove(position);
+        adapter.notifyDataSetChanged();
+        saveDeviceList();
     }
 
     @Override

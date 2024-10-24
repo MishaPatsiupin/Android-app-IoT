@@ -1,13 +1,48 @@
 <resources>
-    <string name="app_name">home</string>
-    <string name="navigation_drawer_open">Open navigation drawer</string>
-    <string name="navigation_drawer_close">Close navigation drawer</string>
-    <string name="nav_header_title">Android Studio</string>
-    <string name="nav_header_subtitle">android.studio@android.com</string>
-    <string name="nav_header_desc">Navigation header</string>
-    <string name="action_settings">Settings</string>
+    <string name="app_name">дома</string>
+    <string name="navigation_drawer_open">Адкрыць навігацыйнае меню</string>
+    <string name="navigation_drawer_close">Закрыць навігацыйнае меню</string>
+    <string name="nav_header_title">Ваша імя</string>
+    <string name="nav_header_subtitle">email@gmail.com</string>
+    <string name="nav_header_desc">Навігацыйны загаловак</string>
+    <string name="action_settings">Налады</string>
 
-    <string name="menu_home">Home</string>
-    <string name="menu_gallery">Gallery</string>
-    <string name="menu_slideshow">Slideshow</string>
+    <string name="menu_home">Галоўная</string>
+    <string name="menu_gallery">Галерэя</string>
+    <string name="menu_slideshow">Слайд-шоў</string>
+
+    <string name="enter_device_name">Увядзіце назву прылады:</string>
+    <string name="add">Дадаць</string>
+    <string name="cancel">Адмяніць</string>
+    <string name="device_name_exists">Назва прылады ўжо існуе</string>
+    <string name="device_name_empty">Назва прылады не можа быць пустой</string>
+    <string name="added_device">Дададзена: %1$s</string>
+    <string name="add_device">Дадаць прыладу</string>
+    <string name="home_page">Дамашняя старонка</string>
+    <string name="don_t_have_an_account">Не маеце ўліковага запісу?</string>
+    <string name="password">Пароль</string>
+    <string name="login">Увайсці</string>
+    <string name="email">Электронная пошта</string>
+    <string name="home">Дамашняя старонка</string>
+    <string name="register">Рэгістрацыя</string>
+    <string name="user_email">hi</string>
+    <string name="enter_device_type">Увядзіце тып:</string>
+    <string name="status_pomp"><![CDATA[Стан паліву ->]]></string>
+    <string name="status_window"><![CDATA[Стан вентыляцыі ->]]></string>
+    <string name="moisture1_text"><![CDATA[Віль. грунту 1 ->]]></string>
+    <string name="moisture2_text"><![CDATA[Віль. грунту 2 ->]]></string>
+    <string name="temp_text"><![CDATA[Температура ->]]></string>
+    <string name="humidity_text"><![CDATA[Віль. паветра ->]]></string>
+    <string name="pressure_text"><![CDATA[Ціск ->]]></string>
+    <string name="liquid_sensor_water_text"><![CDATA[Жидкасць поліву ->]]></string>
+    <string name="liquid_sensor_plant_text"><![CDATA[Перелів ->]]></string>
+    <string name="time_text"><![CDATA[Час абнаўлення ->]]></string>
+    <string name="home_text">
+            ПМС.250503.Пацюпін \n<br/>
+            Інтэрнэт рэчаў. Мабільнае прыкладанне для сістэмы цяплічнага камбіната.\n<br/><br/>
+            Ісходны код і дакументацыя: <a href="https://github.com/MishaPatsiupin/BSUIR/tree/main/Java_Android_IoT">GitHub\n</a><br/><br/>
+            Пацюпін Міхаіл Сяргеевіч<br/>
+            <a href="mailto:misha.bears.minsk@gmail.com">email</a>
+    </string>
+    <string name="bytton_change">Зм.</string>
 </resources>
