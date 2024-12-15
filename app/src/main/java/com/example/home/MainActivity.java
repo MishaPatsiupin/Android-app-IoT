@@ -3,6 +3,11 @@ package com.example.home;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.gesture.Gesture;
+import android.gesture.GestureLibraries;
+import android.gesture.GestureLibrary;
+import android.gesture.GestureOverlayView;
+import android.gesture.Prediction;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
@@ -41,6 +46,8 @@ public class MainActivity extends AppCompatActivity {
     private DeviceAdapter adapter;
     private static final String PREFS_NAME = "device_prefs";
     private static final String DEVICE_LIST_KEY = "device_list";
+
+    private GestureLibrary gestureLib;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,6 +103,67 @@ public class MainActivity extends AppCompatActivity {
                 emailTextView.setText(email);
             }
         }
+
+        GestureOverlayView gestureview = (GestureOverlayView) findViewById(R.id.gestures1);
+
+        gestureLib = GestureLibraries.fromRawResource(this, R.raw.gestures);
+        if (!gestureLib.load()) {
+            finish();
+        }
+
+        gestureview.addOnGesturePerformedListener(handleGestureListener);
+    }
+
+    private GestureOverlayView.OnGesturePerformedListener handleGestureListener = new GestureOverlayView.OnGesturePerformedListener() {
+        public void onGesturePerformed(GestureOverlayView gestureView,
+                                       Gesture gesture) {
+
+            ArrayList<Prediction> predictions = gestureLib.recognize(gesture);
+
+            if (predictions.size() > 0) {
+                Prediction prediction = predictions.get(0);
+                if (prediction.score > 5.0) {
+                    Toast.makeText(MainActivity.this,
+                            "Жэст : " + prediction.name,
+                            Toast.LENGTH_LONG).show();
+                    if (prediction.name.equals("ges_add")){
+                        addDevice();
+                    } else if (prediction.name.equals("ges_del")) {
+                        gesDevice();
+                    }
+                }
+            }
+
+        }
+    };
+
+    private void gesDevice() {
+        // Создаем EditText для ввода названия устройства
+        EditText deviceNameInput = new EditText(this);
+        deviceNameInput.setHint("назва");
+
+        new AlertDialog.Builder(this)
+                .setTitle("Выдаленне прылады")
+                .setMessage("Каб выдаліць прыладу, увядзіце яе назву:")
+                .setView(deviceNameInput)
+                .setPositiveButton("Выдаліць", (dialog, which) -> {
+                    String deviceNameToDelete = deviceNameInput.getText().toString().trim();
+                    // Поиск устройства в списке
+                    boolean found = false;
+                    for (Device device : deviceList) {
+                        if (device.getName().equals(deviceNameToDelete)) {
+                            found = true;
+                            deleteDevice(deviceList.indexOf(device)); // Удаляем устройство
+                            Toast.makeText(this, "Прылада " + deviceNameToDelete + " выдалена", Toast.LENGTH_SHORT).show();
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        Toast.makeText(this, "Прылада з такой назвай не знойдзена", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("Скасаванне", (dialog, which) -> dialog.cancel())
+                .show();
     }
 
     @Override
@@ -149,8 +217,12 @@ public class MainActivity extends AppCompatActivity {
         EditText deviceTypeInput = new EditText(this);
         deviceTypeInput.setHint(getString(R.string.enter_device_type));
 
+        EditText deviceLocalIPInput = new EditText(this);
+        deviceLocalIPInput.setHint(getString(R.string.enter_device_local_ip));
+
         layout.addView(deviceNameInput);
         layout.addView(deviceTypeInput);
+        layout.addView(deviceLocalIPInput);
 
         new AlertDialog.Builder(this)
                 .setTitle(getString(R.string.add_device)) // Заголовок диалога
@@ -158,6 +230,7 @@ public class MainActivity extends AppCompatActivity {
                 .setPositiveButton(getString(R.string.add), (dialog, which) -> {
                     String newDeviceName = deviceNameInput.getText().toString().trim();
                     String newDeviceType = deviceTypeInput.getText().toString().trim();
+                    String newDeviceLocalIP = deviceLocalIPInput.getText().toString().trim();
 
                     if (!newDeviceName.isEmpty() && !newDeviceType.isEmpty()) {
                         boolean exists = false;
@@ -171,7 +244,7 @@ public class MainActivity extends AppCompatActivity {
                         if (exists) {
                             Toast.makeText(this, getString(R.string.device_name_exists), Toast.LENGTH_SHORT).show();
                         } else {
-                            Device newDevice = new Device(newDeviceName, newDeviceType); // Предполагается, что конструктор Device принимает тип
+                            Device newDevice = new Device(newDeviceName, newDeviceType, newDeviceLocalIP);
                             deviceList.add(newDevice);
                             adapter.notifyDataSetChanged();
                             Toast.makeText(this, getString(R.string.added_device, newDeviceName), Toast.LENGTH_SHORT).show();

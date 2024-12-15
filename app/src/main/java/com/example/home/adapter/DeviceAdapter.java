@@ -43,6 +43,7 @@ public class DeviceAdapter extends ArrayAdapter<Device> {
             Intent intent = new Intent(context, DeviceDetailActivity.class);
             intent.putExtra("device_name", device.getName());
             intent.putExtra("device_type", device.getType()); // Передача типа устройства
+            intent.putExtra("device_localIP", device.getLocalIP());
             context.startActivity(intent);
         });
 

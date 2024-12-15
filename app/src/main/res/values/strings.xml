@@ -27,6 +27,7 @@
     <string name="register">Рэгістрацыя</string>
     <string name="user_email">hi</string>
     <string name="enter_device_type">Увядзіце тып:</string>
+    <string name="enter_device_local_ip">Увядзіце IP адрэс:</string>
     <string name="status_pomp"><![CDATA[Стан паліву ->]]></string>
     <string name="status_window"><![CDATA[Стан вентыляцыі ->]]></string>
     <string name="moisture1_text"><![CDATA[Віль. грунту 1 ->]]></string>
@@ -38,11 +39,11 @@
     <string name="liquid_sensor_plant_text"><![CDATA[Перелів ->]]></string>
     <string name="time_text"><![CDATA[Час абнаўлення ->]]></string>
     <string name="home_text">
-            ПМС.250503.Пацюпін \n<br/>
-            Інтэрнэт рэчаў. Мабільнае прыкладанне для сістэмы цяплічнага камбіната.\n<br/><br/>
-            Ісходны код і дакументацыя: <a href="https://github.com/MishaPatsiupin/BSUIR/tree/main/Java_Android_IoT">GitHub\n</a><br/><br/>
-            Пацюпін Міхаіл Сяргеевіч<br/>
-            <a href="mailto:misha.bears.minsk@gmail.com">email</a>
+            ПМС.250503.Пацюпін\n<br/>
+            Інтэрнэт рэчаў. Мабільнае прыкладанне для сістэмы цяплічнага камбіната\n<br/><br/>
+            Ісходны код і дакументацыя: GitHub MishaPatsiupin\BSUIR\n<br/><br/>
+            Пацюпін Міхаіл Сяргеевіч\n<br/>
+            misha.bears.minsk@gmail.com
     </string>
     <string name="bytton_change">Зм.</string>
 </resources>
