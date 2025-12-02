@@ -56,7 +56,7 @@ jobs:
 
           # Install cmdline-tools (if missing), required NDK and accept licenses
           printf 'y\n' | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --install "cmdline-tools;latest" || true
-          printf 'y\n' | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --install "ndk;28.0.12433566" || true
+          printf 'y\n' | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --install "ndk;27.2.12479018" || true
           printf 'y\n' | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --licenses
 
       - name: Create google-services.json (only if secret present)
