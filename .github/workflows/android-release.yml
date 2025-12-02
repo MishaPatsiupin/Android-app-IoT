@@ -38,7 +38,7 @@ jobs:
           export ANDROID_SDK_ROOT="$SDK_ROOT"
           export ANDROID_HOME="$SDK_ROOT"
 
-          # Try to find sdkmanager in common locations or on PATH
+          # Find sdkmanager
           if [ -x "$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" ]; then
             SDKMANAGER="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
           elif [ -x "$SDK_ROOT/cmdline-tools/bin/sdkmanager" ]; then
@@ -48,32 +48,26 @@ jobs:
           elif command -v sdkmanager >/dev/null 2>&1; then
             SDKMANAGER="$(command -v sdkmanager)"
           else
-            # Try bootstrapping cmdline-tools by using the bundled sdkmanager if present in runner
-            echo "sdkmanager not found in SDK, attempting to install cmdline-tools via apt-get fallback (if available)"
-            # On ubuntu-latest, sdkmanager is usually present. If not, fail with clear message.
             echo "ERROR: sdkmanager not found. Ensure Android SDK cmdline-tools are available on the runner." >&2
             exit 1
           fi
 
           echo "Using sdkmanager at: $SDKMANAGER"
 
-          # Ensure cmdline-tools;latest exists (if using sdkmanager that's part of an older tools package this will be a no-op)
-          # Install cmdline-tools;latest if sdkmanager is capable (some runners already have it)
-          YES_YN="y"
-          printf '%s\n' "$YES_YN" | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --install "cmdline-tools;latest" || true
+          # Install cmdline-tools (if missing), required NDK and accept licenses
+          printf 'y\n' | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --install "cmdline-tools;latest" || true
+          printf 'y\n' | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --install "ndk;28.0.12433566" || true
+          printf 'y\n' | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --licenses
 
-          # Install the exact NDK required by the project
-          printf '%s\n' "$YES_YN" | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --install "ndk;28.0.12433566" || true
-
-          # Accept all licenses
-          printf '%s\n' "$YES_YN" | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --licenses
-
-      # Создаём google-services.json только если секрет задан (Firebase временно отключён)
-      - name: Create google-services.json
-        if: ${{ secrets.GOOGLE_SERVICES_JSON != '' }}
+      - name: Create google-services.json (only if secret present)
         run: |
           mkdir -p app
-          echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > app/google-services.json
+          if [ -n "${{ secrets.GOOGLE_SERVICES_JSON }}" ]; then
+            printf '%s' "${{ secrets.GOOGLE_SERVICES_JSON }}" > app/google-services.json
+            echo "google-services.json created"
+          else
+            echo "GOOGLE_SERVICES_JSON secret not set — skipping creation"
+          fi
 
       - name: Build Release APK
         run: ./gradlew assembleRelease --no-daemon
