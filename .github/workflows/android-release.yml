@@ -14,9 +14,6 @@ jobs:
       contents: write
 
     steps:
-      - name: Accept Android SDK Licenses
-        run: yes | sdkmanager --licenses
-  
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -30,17 +27,20 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      #- name: Create google-services.json
-      #  run: |
-      #    echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > app/google-services.json
-
-      # Insert before the "Build Release APK" step
-      - name: Set up Android SDK (install NDK and accept licenses)
+      # Устанавливаем Android cmdline-tools и требуемый NDK, принимаем лицензии
+      - name: Set up Android SDK and NDK
         uses: r0adkll/setup-android@v2
         with:
           api-level: 33
           ndk: 28.0.12433566
-          components: "platform-tools,build-tools-33.0.2"
+          build-tools: '33.0.2'
+          components: platform-tools
+
+      # Создаём google-services.json только если секрет задан (Firebase временно отключён)
+      - name: Create google-services.json
+        if: ${{ secrets.GOOGLE_SERVICES_JSON != '' }}
+        run: |
+          echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > app/google-services.json
 
       - name: Build Release APK
         run: ./gradlew assembleRelease
